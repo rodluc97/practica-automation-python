@@ -1,47 +1,78 @@
 import os
+import logging
 from datetime import datetime
+from typing import Tuple
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 
-date_folder = datetime.now().strftime("%Y-%m-%d")
-# Esto crea una ruta real: Evidences/2026-01-02/Success
-path = os.path.join("Evidences", date_folder, "Success")
 
-if not os.path.exists(path):
-    os.makedirs(path)
+EVIDENCE_ROOT = "Evidences"
+DATE_FMT = "%Y-%m-%d"
+TIME_FMT = "%H-%M-%S"
+
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    # Basic configuration if the project doesn't configure logging
+    logging.basicConfig(level=logging.INFO)
 
 
 class InventoryPage:
+    """Page object for the inventory page of the demo app.
+
+    Provides action methods and helpers to collect screenshots (evidence).
+    """
+
     def __init__(self, driver: WebDriver):
         self.driver = driver
-        self.add_to_cart_buttons = (By.CSS_SELECTOR, "[data-test^='add-to-cart']")
-        self.remove_buttons = (By.CSS_SELECTOR, "[data-test^='remove']")
+        # Locators
+        self._add_to_cart: Tuple[str, str] = (
+            By.CSS_SELECTOR,
+            "[data-test^='add-to-cart']",
+        )
+        self._remove_button: Tuple[str, str] = (
+            By.CSS_SELECTOR,
+            "[data-test^='remove']",
+        )
 
-    def agregar_primer_producto(self):
-        productos = self.driver.find_elements(*self.add_to_cart_buttons)
-        if len(productos) > 0:
-            productos[0].click()
+    # Actions
+    def add_first_product(self) -> None:
+        """Click the first available 'add to cart' button, if any."""
+        products = self.driver.find_elements(*self._add_to_cart)
+        if products:
+            products[0].click()
 
-    def el_boton_remove_es_visible(self):
-        return self.driver.find_element(*self.remove_buttons).is_displayed()
+    def is_remove_button_displayed(self) -> bool:
+        """Return True if a 'remove' button is visible on the page."""
+        return self.driver.find_element(*self._remove_button).is_displayed()
 
-    def tomar_captura_evidencia(self, nombre_paso):
-        """Save a screenshot under `Evidences/<YYYY-MM-DD>/...` with a timestamp."""
-        fecha_carpeta = datetime.now().strftime("%Y-%m-%d")
-        ruta_carpeta = os.path.join("Evidences", fecha_carpeta)
-        os.makedirs(ruta_carpeta, exist_ok=True)
+    # Evidence helpers
+    def tomar_captura_evidencia(self, nombre_paso: str) -> str:
+        """Take a screenshot and return the path to the saved file.
 
-        ts = datetime.now().strftime("%H-%M-%S")
-        ruta = os.path.join(ruta_carpeta, f"{nombre_paso}_{ts}.png")
-        self.driver.save_screenshot(ruta)
-        print(f"Evidencia guardada: {ruta}")
+        Screenshots are saved under: EVIDENCE_ROOT/YYYY-MM-DD/<nombre_paso>_HH-MM-SS.png
+        """
+        date_folder = datetime.now().strftime(DATE_FMT)
+        dest_folder = os.path.join(EVIDENCE_ROOT, date_folder)
+        os.makedirs(dest_folder, exist_ok=True)
 
-    # English-friendly aliases for older tests or English-named helpers
-    def take_screenshot(self, step_name):
+        ts = datetime.now().strftime(TIME_FMT)
+        filename = f"{nombre_paso}_{ts}.png"
+        path = os.path.join(dest_folder, filename)
+
+        try:
+            self.driver.save_screenshot(path)
+            logger.info("Saved evidence: %s", path)
+        except Exception as exc:
+            logger.exception("Failed to save screenshot: %s", exc)
+
+        return path
+
+    # English-friendly aliases
+    def take_screenshot(self, step_name: str) -> str:
         return self.tomar_captura_evidencia(step_name)
 
-    def add_first_product(self):
-        return self.agregar_primer_producto()
+    def el_boton_remove_es_visible(self) -> bool:
+        return self.is_remove_button_displayed()
 
-    def is_remove_button_displayed(self):
-        return self.el_boton_remove_es_visible()
+    def agregar_primer_producto(self) -> None:
+        return self.add_first_product()
