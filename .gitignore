@@ -1,0 +1,17 @@
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Python temporales
+__pycache__/
+*.pyc
+
+# Evidencias y Reportes
+Evidences/
+Reports/
+*.html
+
+# Configuraciones de VS Code
+.vscode/
+*.code-workspace
