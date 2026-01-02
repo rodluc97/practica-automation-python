@@ -3,6 +3,13 @@ from datetime import datetime
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 
+date_folder = datetime.now().strftime("%Y-%m-%d")
+# Esto crea una ruta real: Evidences/2026-01-02/Success
+path = os.path.join("Evidences", date_folder, "Success")
+
+if not os.path.exists(path):
+    os.makedirs(path)
+
 
 class InventoryPage:
     def __init__(self, driver: WebDriver):
