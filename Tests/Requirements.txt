@@ -1,0 +1,4 @@
+pytest
+
+Add-Content "C:\Users\Señora Betsy\Documents\Practica Automation\Test 1\Requirements.txt" "pytest"
+& "C:\Users\Señora Betsy\Documents\Practica Automation\.venv\Scripts\python.exe" -m pip install -r "C:\Users\Señora Betsy\Documents\Practica Automation\Test 1\Requirements.txt"
